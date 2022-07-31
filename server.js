@@ -3,7 +3,6 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const logger = require('morgan');
 const mongoose = require('mongoose')
-const userRouter = require('./router/user_route.js');
 const authenticationRoute = require('./router/authentication_route.js')
 dotenv.config();
 const app = express();
@@ -19,14 +18,11 @@ const options = {
 
 app.use(express.json())
 
-app.use('/', userRouter);
-
 //middleware
 app.use(logger('dev'));
 
 app.use(cors(options));
 
-app.use('/', userRouter)
 app.use('/', authenticationRoute)
 
 app.listen(PORT, () => {

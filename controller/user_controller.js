@@ -4,6 +4,7 @@ const User = require('../model/user_model');
 const bcrypt = require('bcrypt');
 const { sendVerificationEmail } = require('../helper/mailer');
 const jwt = require('jsonwebtoken');
+const {createOtp, verifyOtp} = require('../helper/otp_verification')
 
 signUp = async (req, res) => {
     try {
@@ -83,8 +84,34 @@ login = async (req, res) => {
     }
 }
 
+loginOtp = async (req, res, next) => {
+    createOtp(req.body, (err, results) => {
+        if (err) {
+            return next(err)
+        }
+        return res.status(200).send({
+            message: "Success",
+            data: results
+        })
+    })
+}
+
+otpVerification = async (req, res, next) => {
+    verifyOtp(req.body, (err, results) => {
+        if (err) {
+            return next(err)
+        }
+        return res.status(200).send({
+            message: "Success",
+            data: results,
+        })
+    })
+}
+
 module.exports = {
     signUp,
     login,
     activateAccount,
+    loginOtp,
+    otpVerification
 }

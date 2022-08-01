@@ -9,4 +9,8 @@ router.route('/login').post(UserController.login)
 
 router.route('/activate').post(UserController.activateAccount)
 
+router.route('/otpVerification').post(UserController.loginOtp)
+
+router.route('/verifyOtp').post(UserController.otpVerification)
+
 module.exports = router

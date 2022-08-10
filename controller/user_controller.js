@@ -35,9 +35,9 @@ signUp = async (req, res) => {
             password: encryptedPassword,
             verified
         }).save();
-        const emailVerificationToken = generateToken({id: user._id.toString()}, '30m');
-        const url = `${process.env.BASE_URL}/activate/${emailVerificationToken}`
-        await sendVerificationEmail(user.email, user.userName, url)
+        // const emailVerificationToken = generateToken({id: user._id.toString()}, '30m');
+        // const url = `${process.env.BASE_URL}/activate/${emailVerificationToken}`
+        // await sendVerificationEmail(user.email, user.userName, url)
         res.send({
             id: user._id,
             verified: user.verified,
@@ -65,6 +65,7 @@ login = async (req, res) => {
     try {
         const {email, password} = req.body
         const user = await User.findOne({email})
+        console.log(user)
         if (!user) {
             return res.status(400).json({message: "The email address you entered is not connected to account"})
         }
@@ -77,6 +78,7 @@ login = async (req, res) => {
             id: user._id,
             verified: user.verified,
             token: token,
+            user: user,
             message: "Login successfully!"
         })
     } catch (err) {

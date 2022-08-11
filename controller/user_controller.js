@@ -74,6 +74,9 @@ login = async (req, res) => {
             return res.status(400).json({message: "Invalid credentials. Please try again!"})
         }
         const token = generateToken({id: user._id.toString()}, "7d")
+        if (user.verified === false) {
+            return res.status(400).json({message: "Account has not been activated!"})
+        }
         res.send({
             id: user._id,
             verified: user.verified,

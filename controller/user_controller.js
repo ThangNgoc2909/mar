@@ -35,9 +35,6 @@ signUp = async (req, res) => {
             password: encryptedPassword,
             verified
         }).save();
-        // const emailVerificationToken = generateToken({id: user._id.toString()}, '30m');
-        // const url = `${process.env.BASE_URL}/activate/${emailVerificationToken}`
-        // await sendVerificationEmail(user.email, user.userName, url)
         res.send({
             id: user._id,
             verified: user.verified,
@@ -48,31 +45,38 @@ signUp = async (req, res) => {
     }
 }
 
-activateAccount = async (req, res) => {
-    const {token} = req.body;
-    const user = jwt.verify(token, process.env.TOKEN_SECRET)
-    console.log(user);
-    const check = await User.findById(user.id)
-    if (check.verified === true) {
-        return res.status(400).json({message: "this email is already activated"})
-    } else {
-        await User.findByIdAndUpdate(user.id, {verified: true})
-        return res.status(200).json({message: "Account has been activated"})
+emailActivation = async (req, res) => {
+    try {
+        const {deeplink} = req.body
+    await sendVerificationEmail(User.email, User.userName, deeplink)
+    // const user = jwt.verify(token, process.env.TOKEN_SECRET)
+    // const check = await User.findById(user.id)
+    // if (check) {
+    //     await User.findByIdAndUpdate(user.id, {verified: true})
+    // }
+    // res.send({
+    //     id: user._id,
+    //     verified: user.verified,
+    //     token: token,
+    //     user: user,
+    //     message: "Account activate successfully!"
+    // })
+    } catch (err) {
+        res.status(500).json({message: err.message})
     }
 }
 
 login = async (req, res) => {
     try {
-        const {email, password} = req.body
+        const {email, password, deeplink} = req.body
         const user = await User.findOne({email})
-        console.log(user)
         if (!user) {
             return res.status(400).json({message: "The email address you entered is not connected to account"})
         }
         const check = bcrypt.compare(password, user.password);
         if (!check) {
             return res.status(400).json({message: "Invalid credentials. Please try again!"})
-        }
+        }   
         const token = generateToken({id: user._id.toString()}, "7d")
         if (user.verified === false) {
             return res.status(400).json({message: "Account has not been activated!"})
@@ -116,7 +120,7 @@ otpVerification = async (req, res, next) => {
 module.exports = {
     signUp,
     login,
-    activateAccount,
     loginOtp,
-    otpVerification
+    otpVerification,
+    emailActivation,
 }

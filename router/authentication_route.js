@@ -7,10 +7,10 @@ router.route('/signup').post(UserController.signUp)
 
 router.route('/login').post(UserController.login)
 
-router.route('/activate').post(UserController.activateAccount)
-
 router.route('/otpVerification').post(UserController.loginOtp)
 
 router.route('/verifyOtp').post(UserController.otpVerification)
+
+router.route('/activateAccount').post(UserController.emailActivation)
 
 module.exports = router

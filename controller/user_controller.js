@@ -47,20 +47,19 @@ signUp = async (req, res) => {
 
 emailActivation = async (req, res) => {
     try {
-        const {deeplink} = req.body
-    await sendVerificationEmail(User.email, User.userName, deeplink)
-    // const user = jwt.verify(token, process.env.TOKEN_SECRET)
-    // const check = await User.findById(user.id)
-    // if (check) {
-    //     await User.findByIdAndUpdate(user.id, {verified: true})
-    // }
-    // res.send({
-    //     id: user._id,
-    //     verified: user.verified,
-    //     token: token,
-    //     user: user,
-    //     message: "Account activate successfully!"
-    // })
+        const {deeplink, email} = req.body
+    await sendVerificationEmail(email, deeplink)
+    const user = await User.findOne({email})
+    if (!user) {
+        return res.status(400).json({message: "The email address you entered is not connected to account"})
+    }
+    await User.findByIdAndUpdate(user.id, {verified: true})
+    res.send({
+        id: user._id,
+        verified: user.verified,
+        user: user,
+        message: "Account activate successfully!"
+    })
     } catch (err) {
         res.status(500).json({message: err.message})
     }
@@ -68,7 +67,7 @@ emailActivation = async (req, res) => {
 
 login = async (req, res) => {
     try {
-        const {email, password, deeplink} = req.body
+        const {email, password} = req.body
         const user = await User.findOne({email})
         if (!user) {
             return res.status(400).json({message: "The email address you entered is not connected to account"})

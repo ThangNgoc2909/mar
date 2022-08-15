@@ -14,12 +14,13 @@ const auth = new google.auth.OAuth2(
     oauth_link
 )
 
-exports.sendVerificationEmail = async (email, name, url) => {
+exports.sendVerificationEmail = async (email, url) => {
     auth.setCredentials(
         { refresh_token: MAILING_REFRESH_TOKEN }
     )
 
-    // const accessToken = await auth.getAccessToken();
+    const accessToken = await auth.getAccessToken();
+    console.log(accessToken)
     const html = fs.readFileSync(path.resolve(__dirname, '../index.html'),{ encoding:'utf-8' });
     const replaceHtml = html.replace("####", `${url}`)
     const port = nodemailer.createTransport({
@@ -30,7 +31,7 @@ exports.sendVerificationEmail = async (email, name, url) => {
             clientId: CLIENT_ID,
             clientSecret: CLIENT_SECRET,
             refreshToken: MAILING_REFRESH_TOKEN,
-            accessToken: MAILING_ACCESS_TOKEN
+            accessToken: accessToken
         }
     });
     const mailOptions = {
@@ -43,4 +44,22 @@ exports.sendVerificationEmail = async (email, name, url) => {
         if (err) return err;
         return res;
     });
+}
+
+exports.getAccessToken = async (req, res) => {
+    const oauth2Client = new google.auth.OAuth2(
+        CLIENT_ID,
+        CLIENT_SECRET,
+        oauth_link
+      );
+      const scopes = [
+        'https://mail.google.com/'
+      ];
+
+      const authorizationUrl = oauth2Client.generateAuthUrl({
+        access_type: 'offline',
+        scope: scopes,
+        include_granted_scopes: true
+      });
+      return authorizationUrl
 }

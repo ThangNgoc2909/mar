@@ -1,10 +1,26 @@
 const { validateEmail } = require('../helper/validation');
 const { generateToken } = require('../helper/token');
+const { google } = require("googleapis");
+const dotenv = require("dotenv");
 const User = require('../model/user_model');
 const bcrypt = require('bcrypt');
 const { sendVerificationEmail } = require('../helper/mailer');
 const jwt = require('jsonwebtoken');
 const {createOtp, verifyOtp} = require('../helper/otp_verification')
+const urlParse = require('url-parse')
+const queryParse = require('query-string');
+const axios = require('axios');
+const promise = require('bluebird');
+const oauth_link = "https://developers.google.com/oauthplayground";
+dotenv.config();
+
+const {
+    EMAIL,
+    CLIENT_ID,
+    CLIENT_SECRET,
+    MAILING_REFRESH_TOKEN,
+    MAILING_ACCESS_TOKEN,
+  } = process.env;
 
 signUp = async (req, res) => {
     try {
@@ -116,10 +132,72 @@ otpVerification = async (req, res, next) => {
     })
 }
 
+getAuthorizationUrl = async (req, res) => {
+    const oauth2Client = new google.auth.OAuth2(
+      CLIENT_ID,
+      CLIENT_SECRET,
+      "http://localhost:3005/getAuthorizationUrl"
+    );
+    const scopes = ["https://mail.google.com/"];
+  
+    const url = oauth2Client.generateAuthUrl({
+      access_type: "offline",
+      scope: scopes,
+      include_granted_scopes: true,
+    });
+    res.send({
+      url
+    });
+  };
+  
+  getAuthentication = async (req, res) => {
+    const queryUrl = new urlParse(req.url)
+    const codeUrl = queryParse.parse(queryUrl.query).code;
+    console.log(codeUrl)
+    const oauth2Client = new google.auth.OAuth2(
+        CLIENT_ID,
+        CLIENT_SECRET,
+        "http://localhost:3005/getAuthorizationUrl"
+      );
+    const tokens = await oauth2Client.getToken(codeUrl);
+    console.log(tokens)
+    return
+    try {
+        const results = await axios({
+            method: "POST",
+            headers: {
+                authorization: "Bearer " + tokens.tokens.access_token
+            },
+            "Content-Type": "application/json",
+            url: `https://www.googleapis.com/fitness/v1/users/userId/dataset:aggregate`,
+            data: {
+                "aggregateBy": [
+                    {
+                      "dataTypeName": "com.google.step_count.delta",
+                      "dataSourceId": "derived:com.google.step_count.delta:com.google.android.gms:merge_estimated_steps"
+                    }
+                  ],
+                  "bucketByTime": {
+                    durationMillis: 86400000
+                  },
+                  "startTimeMillis": 1585785599000,
+                  "endTimeMillis": 158595839000,
+            }
+        })
+        console.log(results)
+    } catch (err) {
+        console.log(err)
+    }
+  }
+
 module.exports = {
     signUp,
     login,
     loginOtp,
     otpVerification,
     emailActivation,
+    getAuthorizationUrl,
+    getAuthentication
 }
+
+//4/0AdQt8qivDaIMCDGQhkTHLocPgI4yAYGdNwuJcel53GGAI1cFd2Gcm-gmtgEKpaYrXCFaag

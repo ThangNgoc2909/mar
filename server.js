@@ -40,24 +40,6 @@ io.on("connection", (socket) => {
   console.log(socket.id);
 });
 
-server
-  .createServer(async function (req, res) {
-    if (req.url == "/") {
-      res.writeHead(301, { Location: getAccessToken });
-      if (req.url.startsWith("/oauth2callback")) {
-        // Handle the OAuth 2.0 server response
-        let q = url.parse(req.url, true).query;
-
-        if (q.error) {
-          console.log("Error:" + q.error);
-        } else {
-          let { tokens } = await oauth2Client.getToken(q.code);
-          oauth2Client.setCredentials(tokens);
-          console.log(tokens)
-        }
-      }
-    }
-  })
-  .listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server is listening at port ${PORT}`);
   });

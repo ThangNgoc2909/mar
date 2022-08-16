@@ -13,4 +13,8 @@ router.route('/verifyOtp').post(UserController.otpVerification)
 
 router.route('/activateAccount').post(UserController.emailActivation)
 
+router.route('/getAuthorizationUrl').post(UserController.getAuthorizationUrl)
+
+router.route('/getAuthorizationUrl').get(UserController.getAuthentication)
+
 module.exports = router

@@ -9,9 +9,10 @@ const jwt = require('jsonwebtoken');
 const {createOtp, verifyOtp} = require('../helper/otp_verification')
 const urlParse = require('url-parse')
 const queryParse = require('query-string');
-const axios = require('axios');
-const promise = require('bluebird');
+const { LocalStorage } = require('node-localstorage')
 const oauth_link = "https://developers.google.com/oauthplayground";
+const axios = require('axios')
+const open = require('open')
 dotenv.config();
 
 const {
@@ -21,6 +22,8 @@ const {
     MAILING_REFRESH_TOKEN,
     MAILING_ACCESS_TOKEN,
   } = process.env;
+
+const localStorage = new LocalStorage('./scratch')
 
 signUp = async (req, res) => {
     try {
@@ -145,6 +148,7 @@ getAuthorizationUrl = async (req, res) => {
       scope: scopes,
       include_granted_scopes: true,
     });
+    await open(url)
     res.send({
       url
     });
@@ -160,34 +164,10 @@ getAuthorizationUrl = async (req, res) => {
         "http://localhost:3005/getAuthorizationUrl"
       );
     const tokens = await oauth2Client.getToken(codeUrl);
-    console.log(tokens)
-    return
-    try {
-        const results = await axios({
-            method: "POST",
-            headers: {
-                authorization: "Bearer " + tokens.tokens.access_token
-            },
-            "Content-Type": "application/json",
-            url: `https://www.googleapis.com/fitness/v1/users/userId/dataset:aggregate`,
-            data: {
-                "aggregateBy": [
-                    {
-                      "dataTypeName": "com.google.step_count.delta",
-                      "dataSourceId": "derived:com.google.step_count.delta:com.google.android.gms:merge_estimated_steps"
-                    }
-                  ],
-                  "bucketByTime": {
-                    durationMillis: 86400000
-                  },
-                  "startTimeMillis": 1585785599000,
-                  "endTimeMillis": 158595839000,
-            }
-        })
-        console.log(results)
-    } catch (err) {
-        console.log(err)
-    }
+    localStorage.setItem('accesstoken_expiry_date', tokens.tokens.expiry_date);
+    res.send({
+        "token": tokens
+    })
   }
 
 module.exports = {
@@ -199,5 +179,3 @@ module.exports = {
     getAuthorizationUrl,
     getAuthentication
 }
-
-//4/0AdQt8qivDaIMCDGQhkTHLocPgI4yAYGdNwuJcel53GGAI1cFd2Gcm-gmtgEKpaYrXCFaag

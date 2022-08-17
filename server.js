@@ -36,6 +36,8 @@ app.use(cors(options));
 
 app.use("/", authenticationRoute);
 
+getAuthentication
+
 io.on("connection", (socket) => {
   console.log(socket.id);
 });

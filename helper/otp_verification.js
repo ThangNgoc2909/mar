@@ -15,7 +15,7 @@ exports.createOtp = async (params, callback) => {
     const hash = crypto.createHmac("sha256", key).update(data).digest("hex")
     const phoneNumber = params.phone.replace('0', '+84')
     console.log('phoneNumber', phoneNumber);
-    sendSMS(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, bodySMS, phoneNumber)
+    await sendSMS(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, bodySMS, phoneNumber)
     const fullHash = `${hash}.${expireDate}`
     return callback(null, fullHash)
 }

@@ -18,7 +18,7 @@ const auth = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, oauth_link);
 
 exports.sendVerificationEmail = async (email, url) => {
   auth.setCredentials({ refresh_token: MAILING_REFRESH_TOKEN })
-  return;
+  const accessToken = auth.getAccessToken();
   const html = fs.readFileSync(path.resolve(__dirname, "../index.html"), {
     encoding: "utf-8",
   });

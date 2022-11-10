@@ -1,48 +1,31 @@
-const { validateEmail } = require("../helper/validation");
 const { generateToken } = require("../helper/token");
 const { google } = require("googleapis");
 const dotenv = require("dotenv");
 const User = require("../model/user_info_model");
 const bcrypt = require("bcrypt");
-const { sendVerificationEmail } = require("../helper/mailer");
-const jwt = require("jsonwebtoken");
 const { createOtp, verifyOtp } = require("../helper/otp_verification");
 const urlParse = require("url-parse");
 const queryParse = require("query-string");
 const { LocalStorage } = require("node-localstorage");
-const oauth_link = "https://developers.google.com/oauthplayground";
-const axios = require("axios");
 const open = require("open");
 dotenv.config();
 
-const {
-  EMAIL,
-  CLIENT_ID,
-  CLIENT_SECRET,
-  MAILING_REFRESH_TOKEN,
-  MAILING_ACCESS_TOKEN,
-} = process.env;
+const { CLIENT_ID, CLIENT_SECRET } = process.env;
 
 const localStorage = new LocalStorage("./scratch");
 
+
 signUp = async (req, res) => {
   try {
-    const {
-      email,
-      phoneNumber,
-      dateOfBirth,
-      gender,
-      userName,
-      password,
-      verified,
-    } = req.body;
+    const { email, phoneNumber, dateOfBirth, gender, userName, password } =
+      req.body;
 
     const checkEmailExist = await User.findOne({ email });
     if (checkEmailExist) {
       return res.status(400).json({
         data: {
           message:
-            "This email address already exists, try with a differnet email address",
+            "This email address already exists, try with a different email address",
           error_code: 301,
         },
       });
@@ -60,32 +43,10 @@ signUp = async (req, res) => {
         },
       ],
       password: encryptedPassword,
-      verified,
+      verified: false,
     }).save();
     if (user == null) return;
     res.status(200).json(user);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-emailActivation = async (req, res) => {
-  try {
-    const { deeplink, email } = req.body;
-    await sendVerificationEmail(email, deeplink);
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res
-        .status(400)
-        .json({
-          message: "The email address you entered is not connected to account",
-        });
-    }
-    await User.findByIdAndUpdate(user.id, { verified: true });
-    res.send({
-      ...userModel,
-      message: "Account activate successfully!",
-    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -96,37 +57,36 @@ login = async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
-      return res
-        .status(400)
-        .json({
-          message: "The email address you entered is not connected to account",
-        });
+      return res.status(400).json({
+        data: {
+          message: "The username you entered is not connected to account",
+          error_code: 302,
+        },
+      });
     }
     const check = bcrypt.compare(password, user.password);
     if (!check) {
-      return res
-        .status(400)
-        .json({ message: "Invalid credentials. Please try again!" });
+      return res.status(400).json({
+        data: {
+          message: "Invalid credentials. Please try again!",
+          error_code: 303,
+        },
+      });
     }
     const token = generateToken({ id: user._id.toString() }, "7d");
-    if (user.verified === false) {
-      return res
-        .status(400)
-        .json({ message: "Account has not been activated!" });
-    }
     res.send({
-      id: user._id,
-      verified: user.verified,
-      token: token,
-      user: user,
-      message: "Login successfully!",
+      data: {
+        id: user._id,
+        token: token,
+        user: user,
+      },
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-loginOtp = async (req, res, next) => {
+sendOtp = async (req, res, next) => {
   createOtp(req.body, (err, results) => {
     if (err) {
       return next(err);
@@ -186,9 +146,8 @@ getAuthentication = async (req, res) => {
 module.exports = {
   signUp,
   login,
-  loginOtp,
+  sendOtp,
   otpVerification,
-  emailActivation,
   getAuthorizationUrl,
   getAuthentication,
 };

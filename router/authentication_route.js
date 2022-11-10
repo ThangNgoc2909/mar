@@ -7,11 +7,9 @@ router.route('/signup').post(UserController.signUp)
 
 router.route('/login').post(UserController.login)
 
-router.route('/otpVerification').post(UserController.loginOtp)
+router.route('/sendOtp').post(UserController.sendOtp)
 
 router.route('/verifyOtp').post(UserController.otpVerification)
-
-router.route('/activateAccount').post(UserController.emailActivation)
 
 router.route('/getAuthorizationUrl').post(UserController.getAuthorizationUrl)
 

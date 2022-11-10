@@ -1,6 +1,6 @@
 const nodemailer = require("nodemailer");
 const { google } = require("googleapis");
-const oauth_link = "https://developers.google.com/oauthplayground";
+const oauth_link = "https://developers.google.com/oauthplayground/";
 const dotenv = require("dotenv");
 const path = require("path");
 const fs = require("fs");
@@ -11,14 +11,14 @@ const {
   CLIENT_ID,
   CLIENT_SECRET,
   MAILING_REFRESH_TOKEN,
-  MAILING_ACCESS_TOKEN,
+  MAIL_SCOPE,
 } = process.env;
 
-const auth = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, oauth_link);
+const auth = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, oauth_link)
 
-exports.sendVerificationEmail = async (email, url) => {
-  auth.setCredentials({ refresh_token: MAILING_REFRESH_TOKEN })
-  const accessToken = auth.getAccessToken();
+exports.sendVerificationEmail = async (url, email) => {
+  auth.setCredentials({ refresh_token: MAILING_REFRESH_TOKEN, scope: MAIL_SCOPE, token_type: "Bearer"})
+  const accessToken = await auth.getAccessToken();
   const html = fs.readFileSync(path.resolve(__dirname, "../index.html"), {
     encoding: "utf-8",
   });
